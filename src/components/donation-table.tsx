@@ -1,8 +1,8 @@
 import React from 'react';
-import { Table, Typography, Tag } from 'antd';
+import { Table, Typography, Tag, Button } from 'antd';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { DonationInfo } from '@/models/user';
-import { CalendarOutlined } from '@ant-design/icons'
+import { CalendarOutlined, ContainerOutlined } from '@ant-design/icons'
 import { AxCoin } from './axcoin';
 
 const { Text } = Typography;
@@ -11,11 +11,21 @@ interface DonationTableProps {
     current: number,
     pageSize: number,
     total: number,
+    setSelectedDonation: (donationId: string) => void,
+    onCertModalOpen: () => void,
     onChange: PaginationProps['onChange'],
     donations: DonationInfo[];
 }
 
-export const DonationTable: React.FC<DonationTableProps> = ({ current, pageSize, total, onChange, donations }) => {
+export const DonationTable: React.FC<DonationTableProps> = ({ 
+    current, 
+    pageSize, 
+    total, 
+    onChange, 
+    donations, 
+    setSelectedDonation,
+    onCertModalOpen,
+}) => {
 
     const statusMap: any = {
         "unreviewed": ["未确认", "blue"],
@@ -31,6 +41,7 @@ export const DonationTable: React.FC<DonationTableProps> = ({ current, pageSize,
         title: donation.title,
         createdAt: donation.createdAt.split('T')[0],
         status: statusMap[donation.status] || ["未知状态", ""],
+        hasCert: donation.hasCertificate,
     }));
 
     const columns: TableColumnsType<any> = [
@@ -39,15 +50,28 @@ export const DonationTable: React.FC<DonationTableProps> = ({ current, pageSize,
             align: 'center',
             dataIndex: 'number',
             key: 'number',
-            width: '14%',
+            width: '100px',
             render: (ID: string) => <Text style={{ fontSize: '16px' }}>{ID}</Text>
+        },
+        {
+            title: '证书',
+            align: 'center',
+            dataIndex: 'cert',
+            key: 'cert',
+            width: '60px',
+            render: (_, record) => record.hasCert ? 
+                <Button type="text" icon={<ContainerOutlined /> } onClick={() => {
+                    setSelectedDonation(record.id);
+                    onCertModalOpen();
+                }}></Button>
+                : "-",
         },
         {
             title: '标题',
             align: 'center',
             dataIndex: 'title',
             key: 'title',
-            width: '25%',
+            width: '20%',
             render: (title: string) => <Text strong style={{ fontSize: '16px' }}>{title}</Text>
         },
         {

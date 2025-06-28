@@ -308,6 +308,7 @@ export async function fetchUserDonations(client: ApolloClient<object>, first: nu
                 barcode: edge.node.barcode,
                 updatedAt: edge.node.updatedAt,
                 description: edge.node.description,
+                hasCertificate: edge.node.hasCertificate,
             })
         }) as DonationInfo[]
         let totalCount = resp.data.donations.totalCount as number;

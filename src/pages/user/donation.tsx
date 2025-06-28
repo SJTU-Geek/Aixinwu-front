@@ -8,12 +8,15 @@ import AuthContext from "@/contexts/auth";
 import { MessageContext } from "@/contexts/message";
 import { fetchUserDonations } from "@/services/user";
 import { PaginationProps } from "antd";
+import { DonationCertModal } from "@/components/donation-cert-modal";
 
 const UserDonationPage = () => {
     const pageSize = 8;
     const [donations, setDonations] = useState<DonationInfo[]>([]);
     const [shownPage, setShownPage] = useState<number>(1);
     const [totalResultsCount, setTotalResultsCount] = useState<number>(0);
+    const [isCertModalOpen, setIsCertModalOpen] = useState<boolean>(false);
+    const [selectedDonation, setSelectedDonation] = useState<string | undefined>(undefined);
     const authCtx = useContext(AuthContext);
     const message = useContext(MessageContext);
     const client = authCtx.client;
@@ -53,9 +56,17 @@ const UserDonationPage = () => {
                         onChange={handlePaginationChange}
                         pageSize={pageSize}
                         donations={donations}
+                        setSelectedDonation={setSelectedDonation}
+                        onCertModalOpen={() => {setIsCertModalOpen(true);}}
                     />
                 </div>
             </UserLayout>
+            <DonationCertModal
+                key={selectedDonation}
+                donationId={selectedDonation!} 
+                onClose={() => {setIsCertModalOpen(false);}}
+                isopen={isCertModalOpen}
+            />
         </>
     );
 };

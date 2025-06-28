@@ -18,6 +18,7 @@ query UserDonations($first: Int, $last: Int) {
         price {
           amount
         }
+        hasCertificate
       }
     }
     totalCount

@@ -27,6 +27,7 @@ export interface DonationInfo {
     status: string;
     title: string;
     price: {amount: number};
+    hasCertificate: boolean;
 }
 
 export interface InvitationInfo {

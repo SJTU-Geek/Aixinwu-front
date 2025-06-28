@@ -2998,7 +2998,6 @@ export enum BalanceEventsEnum {
   DonationGranted = 'DONATION_GRANTED',
   DonationRejected = 'DONATION_REJECTED',
   FirstLogin = 'FIRST_LOGIN',
-  InvitationAccepted = 'INVITATION_ACCEPTED',
   InviteNewUser = 'INVITE_NEW_USER',
   ManuallyUpdated = 'MANUALLY_UPDATED',
   Other = 'OTHER',
@@ -3741,6 +3740,46 @@ export type CategoryWhereInput = {
   OR?: InputMaybe<Array<CategoryWhereInput>>;
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   metadata?: InputMaybe<Array<MetadataFilter>>;
+};
+
+/** Represents certificate. */
+export type Certificate = Node & {
+  __typename?: 'Certificate';
+  /** The date and time when the certificate was created. */
+  createdAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The ID of the certificate. */
+  id: Scalars['ID']['output'];
+  /** The name of the certificate. */
+  name: Scalars['String']['output'];
+  /** The number of the certificate. */
+  number?: Maybe<Scalars['Int']['output']>;
+  /** The filename of the certificate template. */
+  templateFilename?: Maybe<Scalars['String']['output']>;
+};
+
+export type CertificateCountableConnection = {
+  __typename?: 'CertificateCountableConnection';
+  edges: Array<CertificateCountableEdge>;
+  /** Pagination data for this connection. */
+  pageInfo: PageInfo;
+  /** A total count of items in the collection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CertificateCountableEdge = {
+  __typename?: 'CertificateCountableEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Certificate;
+};
+
+export type CertificateRender = {
+  __typename?: 'CertificateRender';
+  /** The rendered certificate in PDF format. */
+  certificatePdf?: Maybe<Scalars['String']['output']>;
+  /** The rendered certificate in PNG format. */
+  certificatePng?: Maybe<Scalars['String']['output']>;
 };
 
 /** Represents channel. */
@@ -4910,6 +4949,7 @@ export enum CheckoutErrorCode {
   ProductUnavailableForPurchase = 'PRODUCT_UNAVAILABLE_FOR_PURCHASE',
   QuantityGreaterThanLimit = 'QUANTITY_GREATER_THAN_LIMIT',
   Required = 'REQUIRED',
+  RequirementNotMeet = 'REQUIREMENT_NOT_MEET',
   ShippingAddressNotSet = 'SHIPPING_ADDRESS_NOT_SET',
   ShippingMethodNotApplicable = 'SHIPPING_METHOD_NOT_APPLICABLE',
   ShippingMethodNotSet = 'SHIPPING_METHOD_NOT_SET',
@@ -7165,12 +7205,16 @@ export type Donation = Node & {
   __typename?: 'Donation';
   /** Barcode of the donation. */
   barcode?: Maybe<Scalars['String']['output']>;
+  /** The associated certificate of the donation. */
+  certificate?: Maybe<Certificate>;
   /** The date and time when the donation was created. */
   createdAt?: Maybe<Scalars['DateTime']['output']>;
   /** The description of the donation. */
   description?: Maybe<Scalars['String']['output']>;
   /** The user who made the donation. Requires one of permissions: MANAGE_USERS, MANAGE_DONATIONS, OWNER, READ_USERS */
   donator?: Maybe<User>;
+  /** Indicates if the donation has an associated certificate. */
+  hasCertificate?: Maybe<Scalars['Boolean']['output']>;
   /** The ID of the donation. */
   id: Scalars['ID']['output'];
   /** The number of the donation. */
@@ -7198,15 +7242,7 @@ export type DonationBulkComplete = {
   count: Scalars['Int']['output'];
   /** @deprecated This field will be removed in Saleor 4.0. Use `errors` field instead. */
   donationErrors: Array<DonationBulkError>;
-  /** Input list of donations */
-  donations: Array<Donation>;
   errors: Array<DonationBulkError>;
-};
-
-export type DonationBulkCompleteInput = {
-  accepted: Scalars['Boolean']['input'];
-  /** ID of the donation. */
-  id: Scalars['ID']['input'];
 };
 
 export type DonationBulkError = {
@@ -7268,6 +7304,8 @@ export type DonationCreate = {
 export type DonationCreateInput = {
   /** The barcode of the donation. */
   barcode: Scalars['String']['input'];
+  /** The ID of the certificate associated with the donation. */
+  certificate?: InputMaybe<Scalars['ID']['input']>;
   /** The description of the donation. */
   description: Scalars['String']['input'];
   /** Student ID of the donator */
@@ -7278,6 +7316,8 @@ export type DonationCreateInput = {
   price: MoneyInput;
   /** The quantity of the donation. */
   quantity: Scalars['Int']['input'];
+  /** The template of the donation */
+  templateId?: InputMaybe<Scalars['ID']['input']>;
   /** The title of the donation. */
   title: Scalars['String']['input'];
 };
@@ -7358,6 +7398,8 @@ export type DonationUpdateInput = {
   price?: InputMaybe<MoneyInput>;
   /** The quantity of the donation. */
   quantity?: InputMaybe<Scalars['Int']['input']>;
+  /** The template of the donation */
+  templateId?: InputMaybe<Scalars['ID']['input']>;
   /** The title of the donation. */
   title?: InputMaybe<Scalars['String']['input']>;
 };
@@ -7782,10 +7824,14 @@ export type ExportFile = Job & Node & {
   createdAt: Scalars['DateTime']['output'];
   /** List of events associated with the export. */
   events?: Maybe<Array<ExportEvent>>;
+  /** The type of the file that is exported. */
+  exportType?: Maybe<Scalars['String']['output']>;
   /** The ID of the export file. */
   id: Scalars['ID']['output'];
   /** Job message. */
   message?: Maybe<Scalars['String']['output']>;
+  /** The number of the export file. */
+  number?: Maybe<Scalars['Int']['output']>;
   /** Job status. */
   status: JobStatusEnum;
   /** Date time of job last update in ISO 8601 format. */
@@ -7873,6 +7919,35 @@ export type ExportInfoInput = {
   fields?: InputMaybe<Array<ProductFieldEnum>>;
   /** List of warehouse ids witch should be exported. */
   warehouses?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+/**
+ * Export orders to csv file.
+ *
+ * Requires one of the following permissions: MANAGE_ORDERS.
+ *
+ * Triggers the following webhook events:
+ * - NOTIFY_USER (async): A notification for the exported file.
+ * - ORDER_EXPORT_COMPLETED (async): A notification for the exported file.
+ */
+export type ExportOrders = {
+  __typename?: 'ExportOrders';
+  errors: Array<ExportError>;
+  /** The newly created export file job which is responsible for export data. */
+  exportFile?: Maybe<ExportFile>;
+};
+
+export type ExportOrdersInput = {
+  /** List of order fields witch should be exported. */
+  fields?: InputMaybe<Array<OrderFieldEnum>>;
+  /** Type of exported file. */
+  fileType: FileTypesEnum;
+  /** Filtering options for orders. */
+  filter?: InputMaybe<OrderFilterInput>;
+  /** List of orders IDs to export. */
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** Determine which orders should be exported. */
+  scope: ExportScope;
 };
 
 /**
@@ -11905,6 +11980,7 @@ export type Mutation = {
    * Requires one of the following permissions: MANAGE_PRODUCTS.
    */
   categoryUpdate?: Maybe<CategoryUpdate>;
+  certificateRender?: Maybe<CertificateRender>;
   /**
    * Activate a channel.
    *
@@ -12368,6 +12444,16 @@ export type Mutation = {
    */
   exportGiftCards?: Maybe<ExportGiftCards>;
   /**
+   * Export orders to csv file.
+   *
+   * Requires one of the following permissions: MANAGE_ORDERS.
+   *
+   * Triggers the following webhook events:
+   * - NOTIFY_USER (async): A notification for the exported file.
+   * - ORDER_EXPORT_COMPLETED (async): A notification for the exported file.
+   */
+  exportOrders?: Maybe<ExportOrders>;
+  /**
    * Export products to csv file.
    *
    * Requires one of the following permissions: MANAGE_PRODUCTS.
@@ -12398,7 +12484,9 @@ export type Mutation = {
    * Trigger sending a notification with the notify plugin method. Serializes nodes provided as ids parameter and includes this data in the notification payload.
    *
    * Added in Saleor 3.1.
-   * @deprecated \n\nDEPRECATED: this mutation will be removed in Saleor 4.0.
+   * @deprecated
+   *
+   * DEPRECATED: this mutation will be removed in Saleor 4.0.
    */
   externalNotificationTrigger?: Maybe<ExternalNotificationTrigger>;
   /** Obtain external access tokens for user by custom plugin. */
@@ -12886,7 +12974,9 @@ export type Mutation = {
    * Update shop order settings across all channels. Returns `orderSettings` for the first `channel` in alphabetical order.
    *
    * Requires one of the following permissions: MANAGE_ORDERS.
-   * @deprecated \n\nDEPRECATED: this mutation will be removed in Saleor 4.0. Use `channelUpdate` mutation instead.
+   * @deprecated
+   *
+   * DEPRECATED: this mutation will be removed in Saleor 4.0. Use `channelUpdate` mutation instead.
    */
   orderSettingsUpdate?: Maybe<OrderSettingsUpdate>;
   /**
@@ -13665,14 +13755,18 @@ export type Mutation = {
    * DEPRECATED: this mutation will be removed in Saleor 4.0. Use `PUBLIC_URL` environment variable instead.
    *
    * Requires one of the following permissions: MANAGE_SETTINGS.
-   * @deprecated \n\nDEPRECATED: this mutation will be removed in Saleor 4.0. Use `PUBLIC_URL` environment variable instead.
+   * @deprecated
+   *
+   * DEPRECATED: this mutation will be removed in Saleor 4.0. Use `PUBLIC_URL` environment variable instead.
    */
   shopDomainUpdate?: Maybe<ShopDomainUpdate>;
   /**
    * Fetch tax rates.
    *
    * Requires one of the following permissions: MANAGE_SETTINGS.
-   * @deprecated \n\nDEPRECATED: this mutation will be removed in Saleor 4.0.
+   * @deprecated
+   *
+   * DEPRECATED: this mutation will be removed in Saleor 4.0.
    */
   shopFetchTaxRates?: Maybe<ShopFetchTaxRates>;
   /**
@@ -14356,6 +14450,11 @@ export type MutationCategoryUpdateArgs = {
 };
 
 
+export type MutationCertificateRenderArgs = {
+  donationId: Scalars['ID']['input'];
+};
+
+
 export type MutationChannelActivateArgs = {
   id: Scalars['ID']['input'];
 };
@@ -14674,7 +14773,8 @@ export type MutationDigitalContentUrlCreateArgs = {
 
 
 export type MutationDonationBulkCompleteArgs = {
-  donations: Array<DonationBulkCompleteInput>;
+  accepted: Scalars['Boolean']['input'];
+  ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -14740,6 +14840,11 @@ export type MutationEventDeliveryRetryArgs = {
 
 export type MutationExportGiftCardsArgs = {
   input: ExportGiftCardsInput;
+};
+
+
+export type MutationExportOrdersArgs = {
+  input: ExportOrdersInput;
 };
 
 
@@ -17268,7 +17373,7 @@ export enum OrderEventsEmailsEnum {
   TrackingUpdated = 'TRACKING_UPDATED'
 }
 
-/** The different order event types. */
+/** The different order event types.  */
 export enum OrderEventsEnum {
   AddedProducts = 'ADDED_PRODUCTS',
   Canceled = 'CANCELED',
@@ -17341,6 +17446,41 @@ export type OrderExpired = Event & {
   /** Saleor version that triggered the event. */
   version?: Maybe<Scalars['String']['output']>;
 };
+
+/** Event sent when order export is completed. */
+export type OrderExportCompleted = Event & {
+  __typename?: 'OrderExportCompleted';
+  /** The export file for orders. */
+  export?: Maybe<ExportFile>;
+  /** Time of the event. */
+  issuedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The user or application that triggered the event. */
+  issuingPrincipal?: Maybe<IssuingPrincipal>;
+  /** The application receiving the webhook. */
+  recipient?: Maybe<App>;
+  /** Saleor version that triggered the event. */
+  version?: Maybe<Scalars['String']['output']>;
+};
+
+export enum OrderFieldEnum {
+  AddressFirstName = 'ADDRESS_FIRST_NAME',
+  AddressPhone = 'ADDRESS_PHONE',
+  AddressStreetAddress_1 = 'ADDRESS_STREET_ADDRESS_1',
+  ChargeStatus = 'CHARGE_STATUS',
+  CreatedAt = 'CREATED_AT',
+  CustomerNote = 'CUSTOMER_NOTE',
+  Number = 'NUMBER',
+  OrderlineProductName = 'ORDERLINE_PRODUCT_NAME',
+  OrderlineQuantity = 'ORDERLINE_QUANTITY',
+  OrderlineTotalPriceGrossAmount = 'ORDERLINE_TOTAL_PRICE_GROSS_AMOUNT',
+  Status = 'STATUS',
+  TotalGrossAmount = 'TOTAL_GROSS_AMOUNT',
+  UserAccount = 'USER_ACCOUNT',
+  UserCode = 'USER_CODE',
+  UserEmail = 'USER_EMAIL',
+  UserFirstName = 'USER_FIRST_NAME',
+  UserType = 'USER_TYPE'
+}
 
 export type OrderFilterInput = {
   authorizeStatus?: InputMaybe<Array<OrderAuthorizeStatusEnum>>;
@@ -18394,6 +18534,8 @@ export type OrderSettingsUpdateInput = {
 };
 
 export enum OrderSortField {
+  /** Sort orders by completed at. */
+  CompletedAt = 'COMPLETED_AT',
   /**
    * Sort orders by creation date.
    *
@@ -21453,6 +21595,63 @@ export enum ProductErrorCode {
   VariantNoDigitalContent = 'VARIANT_NO_DIGITAL_CONTENT'
 }
 
+/** Represents product events */
+export type ProductEvent = {
+  __typename?: 'ProductEvent';
+  /** Datetime of the event. */
+  date?: Maybe<Scalars['DateTime']['output']>;
+  /** The ID of the product event. */
+  id: Scalars['ID']['output'];
+  /** The message of the product event. */
+  message?: Maybe<Scalars['String']['output']>;
+  /** The product to which the event belongs. */
+  product?: Maybe<Product>;
+  /** The product name of the event */
+  productName?: Maybe<Scalars['String']['output']>;
+  /** The type of the product event. */
+  type?: Maybe<Scalars['String']['output']>;
+  /** The user of the event. */
+  user?: Maybe<User>;
+};
+
+export type ProductEventCountableConnection = {
+  __typename?: 'ProductEventCountableConnection';
+  edges: Array<ProductEventCountableEdge>;
+  /** Pagination data for this connection. */
+  pageInfo: PageInfo;
+  /** A total count of items in the collection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+export type ProductEventCountableEdge = {
+  __typename?: 'ProductEventCountableEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: ProductEvent;
+};
+
+export type ProductEventFilterInput = {
+  date?: InputMaybe<DateRangeInput>;
+  metadata?: InputMaybe<Array<MetadataFilter>>;
+  type?: InputMaybe<ProductEventsEnum>;
+  user?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ProductEventSortingInput = {
+  /** Specifies the direction in which to sort product_events. */
+  direction: OrderDirection;
+  /** Sort product_events by the selected field. */
+  field: EventSortField;
+};
+
+/** An enumeration. */
+export enum ProductEventsEnum {
+  ProductCreated = 'PRODUCT_CREATED',
+  ProductDeleted = 'PRODUCT_DELETED',
+  ProductUpdated = 'PRODUCT_UPDATED'
+}
+
 /**
  * Event sent when product export is completed.
  *
@@ -23158,6 +23357,67 @@ export type ProductVariantDeletedProductVariantArgs = {
   channel?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Represents product events */
+export type ProductVariantEvent = {
+  __typename?: 'ProductVariantEvent';
+  /** Datetime of the event. */
+  date?: Maybe<Scalars['DateTime']['output']>;
+  /** The ID of the product event. */
+  id: Scalars['ID']['output'];
+  /** The message of the product event. */
+  message?: Maybe<Scalars['String']['output']>;
+  /** The product of the event. */
+  productVariant?: Maybe<ProductVariant>;
+  /** The product name of the event */
+  productVariantName?: Maybe<Scalars['String']['output']>;
+  /** The changed stock. */
+  stockChanged?: Maybe<Scalars['Int']['output']>;
+  /** The type of the product event. */
+  type?: Maybe<Scalars['String']['output']>;
+  /** The user of the event. */
+  user?: Maybe<User>;
+};
+
+export type ProductVariantEventCountableConnection = {
+  __typename?: 'ProductVariantEventCountableConnection';
+  edges: Array<ProductVariantEventCountableEdge>;
+  /** Pagination data for this connection. */
+  pageInfo: PageInfo;
+  /** A total count of items in the collection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+export type ProductVariantEventCountableEdge = {
+  __typename?: 'ProductVariantEventCountableEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: ProductVariantEvent;
+};
+
+export type ProductVariantEventFilterInput = {
+  date?: InputMaybe<DateRangeInput>;
+  metadata?: InputMaybe<Array<MetadataFilter>>;
+  type?: InputMaybe<ProductVariantEventsEnum>;
+  user?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ProductVariantEventSortingInput = {
+  /** Specifies the direction in which to sort product_variant_events. */
+  direction: OrderDirection;
+  /** Sort product_variant_events by the selected field. */
+  field: EventSortField;
+};
+
+/** An enumeration. */
+export enum ProductVariantEventsEnum {
+  ProductVariantCreated = 'PRODUCT_VARIANT_CREATED',
+  ProductVariantDeleted = 'PRODUCT_VARIANT_DELETED',
+  ProductVariantPriceUpdated = 'PRODUCT_VARIANT_PRICE_UPDATED',
+  ProductVariantStockChanged = 'PRODUCT_VARIANT_STOCK_CHANGED',
+  ProductVariantUpdated = 'PRODUCT_VARIANT_UPDATED'
+}
+
 export type ProductVariantFilterInput = {
   isPreorder?: InputMaybe<Scalars['Boolean']['input']>;
   metadata?: InputMaybe<Array<MetadataFilter>>;
@@ -24708,6 +24968,8 @@ export type Query = {
   categories?: Maybe<CategoryCountableConnection>;
   /** Look up a category by ID or slug. */
   category?: Maybe<Category>;
+  /** Certificates created by staff. */
+  certificates?: Maybe<CertificateCountableConnection>;
   /** Look up a channel by ID or slug. */
   channel?: Maybe<Channel>;
   /**
@@ -24740,7 +25002,7 @@ export type Query = {
   collections?: Maybe<CollectionCountableConnection>;
   /** Customer Events */
   customerEvents?: Maybe<CustomerEventCountableConnection>;
-  /** \n\nRequires one of the following permissions: MANAGE_USERS. */
+  /** Requires one of the following permissions: MANAGE_USERS. */
   customerReports?: Maybe<Array<Scalars['Int']['output']>>;
   /**
    * List of the shop's customers.
@@ -24917,12 +25179,16 @@ export type Query = {
   plugins?: Maybe<PluginCountableConnection>;
   /** Look up a product by ID. Requires one of the following permissions to include the unpublished items: MANAGE_ORDERS, MANAGE_DISCOUNTS, MANAGE_PRODUCTS. */
   product?: Maybe<Product>;
+  /** Product events */
+  productEvents?: Maybe<ProductEventCountableConnection>;
   /** Look up a product type by ID. */
   productType?: Maybe<ProductType>;
   /** List of the shop's product types. */
   productTypes?: Maybe<ProductTypeCountableConnection>;
   /** Look up a product variant by ID or SKU. Requires one of the following permissions to include the unpublished items: MANAGE_ORDERS, MANAGE_DISCOUNTS, MANAGE_PRODUCTS. */
   productVariant?: Maybe<ProductVariant>;
+  /** Product variant events */
+  productVariantEvents?: Maybe<ProductVariantEventCountableConnection>;
   /** List of product variants. Requires one of the following permissions to include the unpublished items: MANAGE_ORDERS, MANAGE_DISCOUNTS, MANAGE_PRODUCTS. */
   productVariants?: Maybe<ProductVariantCountableConnection>;
   /** List of the shop's products. Requires one of the following permissions to include the unpublished items: MANAGE_ORDERS, MANAGE_DISCOUNTS, MANAGE_PRODUCTS. */
@@ -25039,7 +25305,7 @@ export type Query = {
    * Requires one of the following permissions: AUTHENTICATED_STAFF_USER, AUTHENTICATED_APP.
    */
   taxCountryConfiguration?: Maybe<TaxCountryConfiguration>;
-  /** \n\nRequires one of the following permissions: AUTHENTICATED_STAFF_USER, AUTHENTICATED_APP. */
+  /** Requires one of the following permissions: AUTHENTICATED_STAFF_USER, AUTHENTICATED_APP. */
   taxCountryConfigurations?: Maybe<Array<TaxCountryConfiguration>>;
   /** List of all tax rates available from tax gateway. */
   taxTypes?: Maybe<Array<TaxType>>;
@@ -25212,6 +25478,14 @@ export type QueryCategoriesArgs = {
 export type QueryCategoryArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryCertificatesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -25547,6 +25821,16 @@ export type QueryProductArgs = {
 };
 
 
+export type QueryProductEventsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<ProductEventFilterInput>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortBy?: InputMaybe<ProductEventSortingInput>;
+};
+
+
 export type QueryProductTypeArgs = {
   id: Scalars['ID']['input'];
 };
@@ -25567,6 +25851,16 @@ export type QueryProductVariantArgs = {
   externalReference?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
   sku?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryProductVariantEventsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<ProductVariantEventFilterInput>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortBy?: InputMaybe<ProductVariantEventSortingInput>;
 };
 
 
@@ -30588,6 +30882,8 @@ export type User = Node & ObjectWithMetadata & {
   orders?: Maybe<OrderCountableConnection>;
   /** List of user's permission groups. */
   permissionGroups?: Maybe<Array<Group>>;
+  /** The positions of the user. Defined by the OIDC provider */
+  positions: Array<Maybe<Scalars['String']['output']>>;
   /** List of private metadata items. Requires staff permissions to access. */
   privateMetadata: Array<MetadataItem>;
   /**
@@ -30863,6 +31159,8 @@ export enum UserSortField {
   Email = 'EMAIL',
   /** Sort users by first name. */
   FirstName = 'FIRST_NAME',
+  /** Sort users by last login. */
+  LastLogin = 'LAST_LOGIN',
   /** Sort users by last modified at. */
   LastModifiedAt = 'LAST_MODIFIED_AT',
   /** Sort users by last name. */
@@ -32476,6 +32774,8 @@ export enum WebhookEventTypeAsyncEnum {
   OrderCreated = 'ORDER_CREATED',
   /** An order is expired. */
   OrderExpired = 'ORDER_EXPIRED',
+  /** An order export is completed. */
+  OrderExportCompleted = 'ORDER_EXPORT_COMPLETED',
   /** An order is fulfilled. */
   OrderFulfilled = 'ORDER_FULFILLED',
   /** Payment is made and an order is fully paid. */
@@ -32891,6 +33191,8 @@ export enum WebhookEventTypeEnum {
   OrderCreated = 'ORDER_CREATED',
   /** An order is expired. */
   OrderExpired = 'ORDER_EXPIRED',
+  /** An order export is completed. */
+  OrderExportCompleted = 'ORDER_EXPORT_COMPLETED',
   /** Filter shipping methods for order. */
   OrderFilterShippingMethods = 'ORDER_FILTER_SHIPPING_METHODS',
   /** An order is fulfilled. */
@@ -33293,6 +33595,7 @@ export enum WebhookSampleEventTypeEnum {
   OrderConfirmed = 'ORDER_CONFIRMED',
   OrderCreated = 'ORDER_CREATED',
   OrderExpired = 'ORDER_EXPIRED',
+  OrderExportCompleted = 'ORDER_EXPORT_COMPLETED',
   OrderFulfilled = 'ORDER_FULFILLED',
   OrderFullyPaid = 'ORDER_FULLY_PAID',
   OrderFullyRefunded = 'ORDER_FULLY_REFUNDED',
@@ -33784,7 +34087,7 @@ export type UserDonationsQueryVariables = Exact<{
 }>;
 
 
-export type UserDonationsQuery = { __typename?: 'Query', donations?: { __typename?: 'DonationCountableConnection', totalCount?: number | null, edges: Array<{ __typename?: 'DonationCountableEdge', node: { __typename?: 'Donation', createdAt?: any | null, barcode?: string | null, id: string, number?: string | null, description?: string | null, quantity?: number | null, status?: string | null, title?: string | null, updatedAt?: any | null, price?: { __typename?: 'Money', amount: number } | null } }> } | null };
+export type UserDonationsQuery = { __typename?: 'Query', donations?: { __typename?: 'DonationCountableConnection', totalCount?: number | null, edges: Array<{ __typename?: 'DonationCountableEdge', node: { __typename?: 'Donation', createdAt?: any | null, barcode?: string | null, id: string, number?: string | null, description?: string | null, quantity?: number | null, status?: string | null, title?: string | null, updatedAt?: any | null, hasCertificate?: boolean | null, price?: { __typename?: 'Money', amount: number } | null } }> } | null };
 
 export type UserInvitationCodeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -36033,6 +36336,7 @@ export const UserDonationsDocument = gql`
         price {
           amount
         }
+        hasCertificate
       }
     }
     totalCount

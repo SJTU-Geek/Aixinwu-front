@@ -55,9 +55,9 @@ const GlobalFooter = () => {
                         value="http://weixin.qq.com/r/B3UaAl7EywO0rRph9yAV"
                     />
                     <Space direction="vertical">
-                        <div><ShopOutlined /> 闵行校区学生中心一楼咨询台爱心屋窗口</div>
+                        <div><ShopOutlined />交大闵行校区学生中心 B1 层大厅</div>
                         <div style={{wordBreak: "break-all", overflowWrap: "break-word"}}>
-                            <ClockCircleOutlined /> 8:20-19:50&nbsp;&nbsp;&nbsp;
+                            <ClockCircleOutlined /> 周一至周日 8:30-21:50（法定节假日除外）&nbsp;&nbsp;&nbsp;
                             {/* <PhoneOutlined style={{transform: "scaleX(-1)"}}/> 021-54745672&nbsp;&nbsp;&nbsp; */}
                             <MailOutlined /> <Link className="footer-link" href="mailto:aixinwu@sjtu.edu.cn">aixinwu@sjtu.edu.cn</Link>
                         </div>

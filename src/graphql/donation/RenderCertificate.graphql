@@ -1,0 +1,6 @@
+mutation RenderCertificate($donationId: ID!) {
+  certificateRender(donationId: $donationId) {
+    certificatePng
+    certificatePdf
+  }
+}

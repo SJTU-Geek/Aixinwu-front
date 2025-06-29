@@ -33943,6 +33943,13 @@ export type CheckoutUpdateNoteMutationVariables = Exact<{
 
 export type CheckoutUpdateNoteMutation = { __typename?: 'Mutation', checkoutCustomerNoteUpdate?: { __typename?: 'CheckoutCustomerNoteUpdate', errors: Array<{ __typename?: 'CheckoutError', code: CheckoutErrorCode, field?: string | null, lines?: Array<string> | null, message?: string | null }> } | null };
 
+export type RenderCertificateMutationVariables = Exact<{
+  donationId: Scalars['ID']['input'];
+}>;
+
+
+export type RenderCertificateMutation = { __typename?: 'Mutation', certificateRender?: { __typename?: 'CertificateRender', certificatePng?: string | null, certificatePdf?: string | null } | null };
+
 export type CarouselUrlsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -35319,6 +35326,40 @@ export function useCheckoutUpdateNoteMutation(baseOptions?: Apollo.MutationHookO
 export type CheckoutUpdateNoteMutationHookResult = ReturnType<typeof useCheckoutUpdateNoteMutation>;
 export type CheckoutUpdateNoteMutationResult = Apollo.MutationResult<CheckoutUpdateNoteMutation>;
 export type CheckoutUpdateNoteMutationOptions = Apollo.BaseMutationOptions<CheckoutUpdateNoteMutation, CheckoutUpdateNoteMutationVariables>;
+export const RenderCertificateDocument = gql`
+    mutation RenderCertificate($donationId: ID!) {
+  certificateRender(donationId: $donationId) {
+    certificatePng
+    certificatePdf
+  }
+}
+    `;
+export type RenderCertificateMutationFn = Apollo.MutationFunction<RenderCertificateMutation, RenderCertificateMutationVariables>;
+
+/**
+ * __useRenderCertificateMutation__
+ *
+ * To run a mutation, you first call `useRenderCertificateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRenderCertificateMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [renderCertificateMutation, { data, loading, error }] = useRenderCertificateMutation({
+ *   variables: {
+ *      donationId: // value for 'donationId'
+ *   },
+ * });
+ */
+export function useRenderCertificateMutation(baseOptions?: Apollo.MutationHookOptions<RenderCertificateMutation, RenderCertificateMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RenderCertificateMutation, RenderCertificateMutationVariables>(RenderCertificateDocument, options);
+      }
+export type RenderCertificateMutationHookResult = ReturnType<typeof useRenderCertificateMutation>;
+export type RenderCertificateMutationResult = Apollo.MutationResult<RenderCertificateMutation>;
+export type RenderCertificateMutationOptions = Apollo.BaseMutationOptions<RenderCertificateMutation, RenderCertificateMutationVariables>;
 export const CarouselUrlsDocument = gql`
     query CarouselUrls {
   carousel {

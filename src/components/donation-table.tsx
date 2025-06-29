@@ -34,6 +34,7 @@ export const DonationTable: React.FC<DonationTableProps> = ({
     }
 
     const dataSource = donations.map(donation => ({
+        id: donation.id,
         key: donation.number,
         number: donation.number,
         quantity: donation.quantity,

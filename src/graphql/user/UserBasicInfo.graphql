@@ -13,5 +13,6 @@ query UserBasicInfo {
     orders(filter: {paymentStatus: FULLY_CHARGED, status: UNFULFILLED}) {
       totalCount
     }
+    isPoor
   }
 }

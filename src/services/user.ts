@@ -23,7 +23,8 @@ import {
     UserInvitationCodeQuery,
     UserInvitationCreateDocument,
     UserInvitationCreateMutation,
-    AddressInput
+    AddressInput,
+    UserBasicInfoQuery
 } from "@/graphql/hooks";
 
 import { AddressInfo } from "@/models/address";
@@ -61,7 +62,7 @@ export function mapAddressInfo(data: Address) : AddressInfo {
 //获取用户信息
 export async function fetchUserBasicInfo(client: ApolloClient<object>) {
     try {
-        const resp = await client.query({query: UserBasicInfoDocument}); 
+        const resp = await client.query<UserBasicInfoQuery>({query: UserBasicInfoDocument}); 
         if (!resp.data || 
             !resp.data.me) {
           throw "数据为空";
@@ -73,7 +74,8 @@ export async function fetchUserBasicInfo(client: ApolloClient<object>) {
             type: data.userType,
             balance: data.balance,
             continuous_login_days: data.continuous,
-            unpicked_order_count: data.orders.totalCount
+            unpicked_order_count: data.orders?.totalCount,
+            is_poor: data.isPoor
         } as UserBasicInfo;
     } catch (error) {
         var errmessage = `获取用户数据失败：${error}`

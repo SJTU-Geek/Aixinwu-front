@@ -14,16 +14,29 @@ export const HomeRightContent = () => {
     const client = authCtx.client;
     const [hotProducts, setHotProducts] = useState<ProductSummary[] | null>(null);
     const [hotSharedProducts, setHotSharedProducts] = useState<ProductSummary[] | null>(null);
+    const [specialDiscountProducts, setSpecialDiscountProducts] = useState<ProductSummary[] | null>(null);
 
     useEffect(() => {
         fetchProductsByCollection(client!, process.env.NEXT_PUBLIC_CHANNEL!, 12, 'hot-products')
-            .then(products => setHotProducts(products))
+            .then(products => setHotProducts(products));
         fetchProductsByCollection(client!, process.env.NEXT_PUBLIC_CHANNEL2!, 12, 'hot-products')
-            .then(products => setHotSharedProducts(products))
-    }, [])
+            .then(products => setHotSharedProducts(products));
+    }, []);
+
+    useEffect(() => {
+        if (authCtx.userInfo?.is_poor) {
+            fetchProductsByCollection(client!, process.env.NEXT_PUBLIC_CHANNEL!, 12, 'special-discount-area')
+                .then(products => setSpecialDiscountProducts(products));
+        }
+    }, [authCtx.userInfo]);
 
     return (
         <>
+            { specialDiscountProducts && 
+                <BasicCard title="特殊折扣专区" divider>
+                    <ProductGrid products={specialDiscountProducts} />
+                </BasicCard>
+            }
             <BasicCard title="热门置换" divider
                 titleExtra={
                     <Link href={"/products/"+process.env.NEXT_PUBLIC_CHANNEL} >{'全部>>'}</Link>
